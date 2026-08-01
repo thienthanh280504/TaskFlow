@@ -298,6 +298,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Hiện màn hình Login nếu chưa có phiên đăng nhập trong sessionStorage
   if (!state.currentUser) {
     openLoginScreen();
+  } else {
+    closeLoginScreen();
   }
 });
 
@@ -2811,12 +2813,18 @@ function formatDateVN(dateStr) {
 
 function openLoginScreen() {
   const loginEl = document.getElementById('login-screen');
-  if (loginEl) loginEl.classList.add('active');
+  if (loginEl) {
+    loginEl.style.display = 'flex';
+    loginEl.classList.add('active');
+  }
 }
 
 function closeLoginScreen() {
   const loginEl = document.getElementById('login-screen');
-  if (loginEl) loginEl.classList.remove('active');
+  if (loginEl) {
+    loginEl.style.display = 'none';
+    loginEl.classList.remove('active');
+  }
 }
 
 function toggleLoginPasswordVisibility() {
@@ -3075,9 +3083,13 @@ function setupFirebaseRealtimeListeners() {
   db.collection('articles').onSnapshot((snapshot) => {
     if (snapshot && !snapshot.empty) {
       const items = [];
-      snapshot.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
-      state.articles = items;
-      localStorage.setItem('taskflow_articles', JSON.stringify(state.articles));
+      snapshot.forEach(doc => { if (doc.exists && doc.data()) items.push({ id: doc.id, ...doc.data() }); });
+      if (items.length > 0) {
+        state.articles = items;
+        localStorage.setItem('taskflow_articles', JSON.stringify(state.articles));
+      }
+    } else if (db && state.articles.length > 0) {
+      state.articles.forEach(item => syncItemToFirebase('articles', item));
     }
     renderArticlesView();
     renderOverviewView();
@@ -3091,9 +3103,13 @@ function setupFirebaseRealtimeListeners() {
   db.collection('prompts').onSnapshot((snapshot) => {
     if (snapshot && !snapshot.empty) {
       const items = [];
-      snapshot.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
-      state.prompts = items;
-      localStorage.setItem('taskflow_prompts', JSON.stringify(state.prompts));
+      snapshot.forEach(doc => { if (doc.exists && doc.data()) items.push({ id: doc.id, ...doc.data() }); });
+      if (items.length > 0) {
+        state.prompts = items;
+        localStorage.setItem('taskflow_prompts', JSON.stringify(state.prompts));
+      }
+    } else if (db && state.prompts.length > 0) {
+      state.prompts.forEach(item => syncItemToFirebase('prompts', item));
     }
     renderPromptsView();
     renderOverviewView();
@@ -3107,9 +3123,13 @@ function setupFirebaseRealtimeListeners() {
   db.collection('backlinks').onSnapshot((snapshot) => {
     if (snapshot && !snapshot.empty) {
       const items = [];
-      snapshot.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
-      state.backlinks = items;
-      localStorage.setItem('taskflow_backlinks', JSON.stringify(state.backlinks));
+      snapshot.forEach(doc => { if (doc.exists && doc.data()) items.push({ id: doc.id, ...doc.data() }); });
+      if (items.length > 0) {
+        state.backlinks = items;
+        localStorage.setItem('taskflow_backlinks', JSON.stringify(state.backlinks));
+      }
+    } else if (db && state.backlinks.length > 0) {
+      state.backlinks.forEach(item => syncItemToFirebase('backlinks', item));
     }
     renderBacklinksView();
     renderOverviewView();
@@ -3123,9 +3143,13 @@ function setupFirebaseRealtimeListeners() {
   db.collection('backlinkBlogger').onSnapshot((snapshot) => {
     if (snapshot && !snapshot.empty) {
       const items = [];
-      snapshot.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
-      state.backlinkBlogger = items;
-      localStorage.setItem('taskflow_backlinkBlogger', JSON.stringify(state.backlinkBlogger));
+      snapshot.forEach(doc => { if (doc.exists && doc.data()) items.push({ id: doc.id, ...doc.data() }); });
+      if (items.length > 0) {
+        state.backlinkBlogger = items;
+        localStorage.setItem('taskflow_backlinkBlogger', JSON.stringify(state.backlinkBlogger));
+      }
+    } else if (db && state.backlinkBlogger.length > 0) {
+      state.backlinkBlogger.forEach(item => syncItemToFirebase('backlinkBlogger', item));
     }
     renderBacklinkBloggerView();
     renderOverviewView();
@@ -3139,9 +3163,13 @@ function setupFirebaseRealtimeListeners() {
   db.collection('syntax').onSnapshot((snapshot) => {
     if (snapshot && !snapshot.empty) {
       const items = [];
-      snapshot.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
-      state.syntax = items;
-      localStorage.setItem('taskflow_syntax', JSON.stringify(state.syntax));
+      snapshot.forEach(doc => { if (doc.exists && doc.data()) items.push({ id: doc.id, ...doc.data() }); });
+      if (items.length > 0) {
+        state.syntax = items;
+        localStorage.setItem('taskflow_syntax', JSON.stringify(state.syntax));
+      }
+    } else if (db && state.syntax.length > 0) {
+      state.syntax.forEach(item => syncItemToFirebase('syntax', item));
     }
     renderSyntaxView();
     renderOverviewView();
