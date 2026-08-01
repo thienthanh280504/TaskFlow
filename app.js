@@ -1,3 +1,14 @@
+
+function getActiveMemberId() {
+  if (state.currentUser && state.currentUser.memberId) {
+    return state.currentUser.memberId;
+  }
+  if (state.members && state.members.length > 0) {
+    return state.members[0].id;
+  }
+  return '';
+}
+
 /* ==========================================================================
    TaskFlow Dashboard Application Logic
    SEO, Content, Prompt & Syntax Management System (Custom Category Input & Draft Protection)
@@ -461,7 +472,7 @@ function saveCategory(moduleKey, event) {
   }
 
   state.categories.push(val);
-  const currentMemId = state.currentUser ? state.currentUser.memberId : 'm1';
+  const currentMemId = state.currentUser ? state.currentUser.memberId : getActiveMemberId();
   logMemberActivity(currentMemId, 'Thêm Phân Khu', val, moduleKey);
   saveDataToStorage();
   renderAllCategorySelectOptions();
@@ -484,7 +495,7 @@ function deleteCategory(moduleKey, catName) {
   }
 
   state.categories = state.categories.filter(c => c !== catName);
-  const currentMemId = state.currentUser ? state.currentUser.memberId : 'm1';
+  const currentMemId = state.currentUser ? state.currentUser.memberId : getActiveMemberId();
   logMemberActivity(currentMemId, 'Xóa Phân Khu', catName, moduleKey);
   saveDataToStorage();
   renderAllCategorySelectOptions();
@@ -635,7 +646,7 @@ function deleteMember(memberId) {
 
   state.members = state.members.filter(x => x.id !== memberId);
   
-  const fallbackMemId = state.members[0]?.id || 'm1';
+  const fallbackMemId = getActiveMemberId();
   state.articles.forEach(a => { if (a.memberId === memberId) a.memberId = fallbackMemId; });
   state.backlinks.forEach(b => { if (b.memberId === memberId) b.memberId = fallbackMemId; });
   state.backlinkBlogger.forEach(b => { if (b.memberId === memberId) b.memberId = fallbackMemId; });
@@ -982,7 +993,7 @@ function logMemberActivity(memberId, action, detail, moduleName) {
   const now = new Date();
   const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
 
-  const currentMemId = memberId || (state.currentUser ? state.currentUser.memberId : 'm1');
+  const currentMemId = memberId || (state.currentUser ? state.currentUser.memberId : getActiveMemberId());
 
   const actItem = {
     id: 'act_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
@@ -1177,7 +1188,7 @@ function savePrompt(e) {
   const itemObj = id ? state.prompts.find(p => p.id === id) : state.prompts[0];
   saveDataToStorage();
   if (itemObj) syncItemToFirebase('prompts', itemObj);
-  const currentMemId = state.currentUser ? state.currentUser.memberId : 'm1';
+  const currentMemId = state.currentUser ? state.currentUser.memberId : getActiveMemberId();
   logMemberActivity(currentMemId, id ? 'Sửa Prompt' : 'Tạo Prompt', title, 'Prompt');
   clearFormAndDraft('form-prompt');
   closeModal('modal-prompt');
@@ -1208,7 +1219,7 @@ function deletePrompt(id) {
       const p = state.prompts.find(x => x.id === id);
       state.prompts = state.prompts.filter(x => x.id !== id);
       deleteItemFromFirebase('prompts', id);
-      const currentMemId = state.currentUser ? state.currentUser.memberId : 'm1';
+      const currentMemId = state.currentUser ? state.currentUser.memberId : getActiveMemberId();
       logMemberActivity(currentMemId, 'Xóa Prompt', p ? p.title : '', 'Prompt');
       saveDataToStorage();
       renderPromptCategoryFilterOptions();
@@ -1254,7 +1265,7 @@ function renderArticlesView() {
     if (createBtn) createBtn.style.display = 'none';
     if (noteBtn) {
       noteBtn.style.display = 'inline-flex';
-      const activeMem = state.currentUser ? state.currentUser.memberId : 'm1';
+      const activeMem = state.currentUser ? state.currentUser.memberId : getActiveMemberId();
       const noteKey = `taskflow_note_articles_${activeMem}`;
       const hasNote = !!(localStorage.getItem(noteKey) || '').trim();
       const dot = document.getElementById('btn-note-article-dot');
@@ -1281,7 +1292,7 @@ let _noteModalContext = { section: null, memberId: null };
 function openMemberNoteModal(section) {
   let memFilter = state.activeMemberFilter[section];
   if (!memFilter || memFilter === 'all') {
-    memFilter = state.currentUser ? state.currentUser.memberId : (state.members[0]?.id || 'm1');
+    memFilter = state.currentUser ? state.currentUser.memberId : (getActiveMemberId());
   }
 
   _noteModalContext = { section, memberId: memFilter };
@@ -1416,7 +1427,7 @@ function openCreateArticleModal() {
       selectEl.disabled = true;
     } else {
       selectEl.disabled = false;
-      if (!selectEl.value) selectEl.value = state.members[0]?.id || 'm1';
+      if (!selectEl.value) selectEl.value = getActiveMemberId();
     }
   }
 
@@ -1480,7 +1491,7 @@ function editArticle(id) {
       selectEl.value = activeMem;
       selectEl.disabled = true;
     } else {
-      selectEl.value = a.memberId || 'm1';
+      selectEl.value = a.memberId || getActiveMemberId();
       selectEl.disabled = false;
     }
   }
@@ -1504,7 +1515,7 @@ function deleteArticle(id) {
       const a = state.articles.find(x => x.id === id);
       state.articles = state.articles.filter(x => x.id !== id);
       deleteItemFromFirebase('articles', id);
-      const currentMemId = state.currentUser ? state.currentUser.memberId : (a ? a.memberId : 'm1');
+      const currentMemId = state.currentUser ? state.currentUser.memberId : (a ? a.memberId : getActiveMemberId());
       logMemberActivity(currentMemId, 'Xóa Bài Viết', a ? a.title : '', 'Bài viết');
       saveDataToStorage();
       renderArticlesView();
@@ -1536,7 +1547,7 @@ function renderBacklinksView() {
     if (createBtn) createBtn.style.display = 'inline-flex';
     if (noteBtn) {
       noteBtn.style.display = 'inline-flex';
-      const activeMem = memFilter !== 'all' ? memFilter : (state.currentUser ? state.currentUser.memberId : 'm1');
+      const activeMem = memFilter !== 'all' ? memFilter : (state.currentUser ? state.currentUser.memberId : getActiveMemberId());
       const hasNote = !!(localStorage.getItem(`taskflow_note_backlinks_${activeMem}`) || '').trim();
       const dot = document.getElementById('btn-note-backlinks-dot');
       if (dot) dot.style.display = hasNote ? 'inline-block' : 'none';
@@ -1548,7 +1559,7 @@ function renderBacklinksView() {
     if (createBtn) createBtn.style.display = 'none';
     if (noteBtn) {
       noteBtn.style.display = 'inline-flex';
-      const activeMem = state.currentUser ? state.currentUser.memberId : 'm1';
+      const activeMem = state.currentUser ? state.currentUser.memberId : getActiveMemberId();
       const hasNote = !!(localStorage.getItem(`taskflow_note_backlinks_${activeMem}`) || '').trim();
       const dot = document.getElementById('btn-note-backlinks-dot');
       if (dot) dot.style.display = hasNote ? 'inline-block' : 'none';
@@ -1635,7 +1646,7 @@ function openCreateBacklinkModal() {
       selectEl.disabled = true;
     } else {
       selectEl.disabled = false;
-      if (!selectEl.value) selectEl.value = state.members[0]?.id || 'm1';
+      if (!selectEl.value) selectEl.value = getActiveMemberId();
     }
   }
 
@@ -1704,7 +1715,7 @@ function editBacklink(id) {
       selectEl.value = activeMem;
       selectEl.disabled = true;
     } else {
-      selectEl.value = b.memberId || 'm1';
+      selectEl.value = b.memberId || getActiveMemberId();
       selectEl.disabled = false;
     }
   }
@@ -1736,7 +1747,7 @@ function deleteBacklink(id) {
       const b = state.backlinks.find(x => x.id === id);
       state.backlinks = state.backlinks.filter(x => x.id !== id);
       deleteItemFromFirebase('backlinks', id);
-      const currentMemId = state.currentUser ? state.currentUser.memberId : (b ? b.memberId : 'm1');
+      const currentMemId = state.currentUser ? state.currentUser.memberId : (b ? b.memberId : getActiveMemberId());
       logMemberActivity(currentMemId, 'Xóa Backlink', b ? (b.primaryKeyword || b.targetUrl || '') : '', 'Backlink');
       saveDataToStorage();
       renderBacklinksView();
@@ -1768,7 +1779,7 @@ function renderBacklinkBloggerView() {
     if (createBtn) createBtn.style.display = 'inline-flex';
     if (noteBtn) {
       noteBtn.style.display = 'inline-flex';
-      const activeMem = memFilter !== 'all' ? memFilter : (state.currentUser ? state.currentUser.memberId : 'm1');
+      const activeMem = memFilter !== 'all' ? memFilter : (state.currentUser ? state.currentUser.memberId : getActiveMemberId());
       const hasNote = !!(localStorage.getItem(`taskflow_note_backlinkBlogger_${activeMem}`) || '').trim();
       const dot = document.getElementById('btn-note-backlinkBlogger-dot');
       if (dot) dot.style.display = hasNote ? 'inline-block' : 'none';
@@ -1780,7 +1791,7 @@ function renderBacklinkBloggerView() {
     if (createBtn) createBtn.style.display = 'none';
     if (noteBtn) {
       noteBtn.style.display = 'inline-flex';
-      const activeMem = state.currentUser ? state.currentUser.memberId : 'm1';
+      const activeMem = state.currentUser ? state.currentUser.memberId : getActiveMemberId();
       const hasNote = !!(localStorage.getItem(`taskflow_note_backlinkBlogger_${activeMem}`) || '').trim();
       const dot = document.getElementById('btn-note-backlinkBlogger-dot');
       if (dot) dot.style.display = hasNote ? 'inline-block' : 'none';
@@ -1874,7 +1885,7 @@ function openCreateBacklinkBloggerModal() {
       selectEl.disabled = true;
     } else {
       selectEl.disabled = false;
-      if (!selectEl.value) selectEl.value = state.members[0]?.id || 'm1';
+      if (!selectEl.value) selectEl.value = getActiveMemberId();
     }
   }
 
@@ -1947,7 +1958,7 @@ function editBacklinkBlogger(id) {
   const activeMem = state.activeMemberFilter.backlinkBlogger;
   const selectEl = document.getElementById('backlinkBlogger-member-input');
   if (selectEl) {
-    selectEl.value = b.memberId || (activeMem !== 'all' ? activeMem : 'm1');
+    selectEl.value = b.memberId || (activeMem !== 'all' ? activeMem : getActiveMemberId());
     selectEl.disabled = (activeMem && activeMem !== 'all');
   }
 
@@ -1979,7 +1990,7 @@ function deleteBacklinkBlogger(id) {
       const b = state.backlinkBlogger.find(x => x.id === id);
       state.backlinkBlogger = state.backlinkBlogger.filter(x => x.id !== id);
       deleteItemFromFirebase('backlinkBlogger', id);
-      const currentMemId = state.currentUser ? state.currentUser.memberId : (b ? b.memberId : 'm1');
+      const currentMemId = state.currentUser ? state.currentUser.memberId : (b ? b.memberId : getActiveMemberId());
       logMemberActivity(currentMemId, 'Xóa Blogger', b ? b.bloggerUrl : '', 'Blogger');
       saveDataToStorage();
       renderBacklinkBloggerView();
@@ -1998,7 +2009,7 @@ function getCurrentSyntaxMemberId() {
   if (memFilter && memFilter !== 'all') {
     return memFilter;
   }
-  return state.members[0]?.id || 'm1';
+  return getActiveMemberId();
 }
 
 function getGoogleSyntaxListForActiveMember() {
@@ -2462,7 +2473,7 @@ function openCreateSyntaxModal() {
       selectEl.disabled = true;
     } else {
       selectEl.disabled = false;
-      selectEl.value = state.members[0]?.id || 'm1';
+      selectEl.value = getActiveMemberId();
     }
   }
 
@@ -2489,7 +2500,7 @@ function saveSyntax(e) {
   if (!memberId && id) {
     memberId = state.syntax.find(x => x.id === id)?.memberId || 'm1';
   }
-  if (!memberId) memberId = state.members[0]?.id || 'm1';
+  if (!memberId) memberId = getActiveMemberId();
 
   const type = document.getElementById('syntax-type-input')?.value || 'Google Search';
   const primaryKeyword = document.getElementById('syntax-kw-input').value.trim();
@@ -2546,7 +2557,7 @@ function editSyntax(id) {
   const activeMem = state.activeMemberFilter.syntax;
   const selectEl = document.getElementById('syntax-member-input');
   if (selectEl) {
-    selectEl.value = s.memberId || (activeMem !== 'all' ? activeMem : 'm1');
+    selectEl.value = s.memberId || (activeMem !== 'all' ? activeMem : getActiveMemberId());
     selectEl.disabled = (activeMem && activeMem !== 'all');
   }
 
@@ -2565,7 +2576,7 @@ function deleteSyntax(id) {
       const s = state.syntax.find(x => x.id === id);
       state.syntax = state.syntax.filter(x => x.id !== id);
       deleteItemFromFirebase('syntax', id);
-      const currentMemId = state.currentUser ? state.currentUser.memberId : (s ? s.memberId : 'm1');
+      const currentMemId = state.currentUser ? state.currentUser.memberId : (s ? s.memberId : getActiveMemberId());
       logMemberActivity(currentMemId, 'Xóa Cú Pháp', s ? (s.primaryKeyword || s.title || '') : '', 'Cú pháp');
       saveDataToStorage();
       renderSyntaxView();
@@ -2953,7 +2964,7 @@ function updateCurrentUserBadge() {
   if (!container) return;
 
   if (state.currentUser && state.currentUser.name) {
-    const memberId = state.currentUser.memberId || 'm1';
+    const memberId = state.currentUser.memberId || getActiveMemberId();
     const avatarHTML = getMemberAvatarHTML(memberId, 'xs');
     container.innerHTML = `
       <span class="member-badge">${avatarHTML} <span>${escapeHTML(state.currentUser.name)}</span></span>
