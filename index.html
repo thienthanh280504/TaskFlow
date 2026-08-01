@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskFlow - SEO & Content Dashboard</title>
+  <!-- Favicon Logo (Exact TaskFlow Rocket Icon) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%23818cf8'/><stop offset='100%25' stop-color='%234f46e5'/></linearGradient></defs><rect width='64' height='64' rx='18' fill='url(%23g)'/><g fill='%23ffffff'><path d='M22 39 C22 24 25 15 32 15 C39 15 42 24 42 39 Z'/><path d='M19 39 C19 37.5 20.5 36.5 22 36.5 L42 36.5 C43.5 36.5 45 37.5 45 39 L45 42 C45 43.5 43.5 44.5 42 44.5 L22 44.5 C20.5 44.5 19 43.5 19 42 Z'/><polygon points='26,44.5 38,44.5 32,54'/></g><circle cx='32' cy='27' r='3.5' fill='%234f46e5'/></svg>">
+  <link rel="shortcut icon" href="favicon.svg">
+  <!-- Google Fonts: Be Vietnam Pro -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <!-- Remixicon for sleek iconography -->
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="app-sidebar">
+      <div class="brand">
+        <div class="brand-icon" title="TaskFlow">
+          <i class="ri-rocket-2-fill"></i>
+        </div>
+        <div class="brand-text">
+          <h2>TaskFlow</h2>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <!-- 1. Overview -->
+        <button class="nav-item active" data-view="overview" onclick="switchView('overview')" title="Tổng quan">
+          <i class="ri-dashboard-3-line"></i>
+          <span class="nav-text">Tổng quan</span>
+        </button>
+
+        <!-- 2. Prompt -->
+        <button class="nav-item" data-view="prompts" onclick="switchView('prompts')" title="Prompt">
+          <i class="ri-magic-line"></i>
+          <span class="nav-text">Prompt</span>
+        </button>
+
+        <!-- 3. Bài viết -->
+        <div class="nav-group">
+          <button class="nav-item" data-view="articles" onclick="toggleSubmenu('articles')">
+            <i class="ri-article-line"></i>
+            <span class="nav-text">Bài viết</span>
+            <i class="ri-arrow-down-s-line submenu-arrow" id="arrow-articles"></i>
+          </button>
+          <div class="sub-menu" id="submenu-articles">
+            <!-- Dynamically rendered by JS -->
+          </div>
+        </div>
+
+        <!-- 4. Backlink -->
+        <div class="nav-group">
+          <button class="nav-item" data-view="backlinks" onclick="toggleSubmenu('backlinks')">
+            <i class="ri-link-m"></i>
+            <span class="nav-text">Backlink</span>
+            <i class="ri-arrow-down-s-line submenu-arrow" id="arrow-backlinks"></i>
+          </button>
+          <div class="sub-menu" id="submenu-backlinks">
+            <!-- Dynamically rendered by JS -->
+          </div>
+        </div>
+
+        <!-- 5. Backlink Blogger -->
+        <div class="nav-group">
+          <button class="nav-item" data-view="backlinkBlogger" onclick="toggleSubmenu('backlinkBlogger')">
+            <i class="ri-rss-line"></i>
+            <span class="nav-text">Backlink Blogger</span>
+            <i class="ri-arrow-down-s-line submenu-arrow" id="arrow-backlinkBlogger"></i>
+          </button>
+          <div class="sub-menu" id="submenu-backlinkBlogger">
+            <!-- Dynamically rendered by JS -->
+          </div>
+        </div>
+
+        <!-- 5. Cú pháp -->
+        <div class="nav-group">
+          <button class="nav-item" data-view="syntax" onclick="toggleSubmenu('syntax')">
+            <i class="ri-code-s-slash-line"></i>
+            <span class="nav-text">Cú pháp</span>
+            <i class="ri-arrow-down-s-line submenu-arrow" id="arrow-syntax"></i>
+          </button>
+          <div class="sub-menu" id="submenu-syntax">
+            <!-- Dynamically rendered by JS -->
+          </div>
+        </div>
+
+      </nav>
+
+      <!-- Sidebar User Profile Footer -->
+      <div class="sidebar-footer">
+        <div class="user-profile-widget" id="user-profile-widget">
+          <div id="current-user-badge">
+            <!-- Populated by JS -->
+          </div>
+          <button class="btn-logout-icon" onclick="handleLogout()" title="Đăng xuất / Đổi tài khoản">
+            <i class="ri-logout-box-r-line"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content" id="main-content">
+      <!-- Header -->
+      <header class="top-header">
+        <div class="header-left">
+          <button class="mobile-menu-toggle" id="menu-toggle" onclick="toggleSidebarMobile()"><i class="ri-menu-line"></i></button>
+          <div class="page-title-box">
+            <h1 id="page-title">TỔNG QUAN DASHBOARD</h1>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <!-- Theme Toggle -->
+          <button class="theme-toggle" id="theme-toggle" title="Chuyển chế độ Sáng / Tối" onclick="toggleTheme()">
+            <i class="ri-sun-line icon-sun"></i>
+            <i class="ri-moon-line icon-moon"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Dynamic Views Container -->
+      <div class="content-body">
+
+        <!-- 1. OVERVIEW VIEW -->
+        <section class="view-section active" id="view-overview">
+          <!-- KPI Grid (5 Modules) -->
+          <div class="kpi-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; margin-bottom: 20px;">
+            <div class="kpi-card accent-purple">
+              <div class="kpi-details">
+                <span class="kpi-title">Thư viện Prompt</span>
+                <h3 class="kpi-value" id="kpi-prompts-count">0</h3>
+              </div>
+            </div>
+            <div class="kpi-card accent-blue">
+              <div class="kpi-details">
+                <span class="kpi-title">Bài viết Quản lý</span>
+                <h3 class="kpi-value" id="kpi-articles-count">0</h3>
+              </div>
+            </div>
+            <div class="kpi-card accent-emerald">
+              <div class="kpi-details">
+                <span class="kpi-title">Nguồn Backlink</span>
+                <h3 class="kpi-value" id="kpi-backlinks-count">0</h3>
+              </div>
+            </div>
+            <div class="kpi-card accent-rose">
+              <div class="kpi-details">
+                <span class="kpi-title">Backlink Blogger</span>
+                <h3 class="kpi-value" id="kpi-blogger-count">0</h3>
+              </div>
+            </div>
+            <div class="kpi-card accent-amber">
+              <div class="kpi-details">
+                <span class="kpi-title">Dữ liệu Cú Pháp</span>
+                <h3 class="kpi-value" id="kpi-syntax-count">0</h3>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Dashboard Grid: Realtime Activity Log (2fr) + Member Syntax (1fr) -->
+          <div class="dashboard-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 20px;">
+            <!-- Realtime Member Activity Table (Left - 2fr) -->
+            <div class="dashboard-card">
+              <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <h3>Nhật ký hoạt động</h3>
+                </div>
+                <div style="display: flex; align-items: center;">
+                  <span class="live-glowing-dot" title="Realtime Active"></span>
+                </div>
+              </div>
+              <div class="table-container" style="border: none; border-radius: 0;">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>THÀNH VIÊN</th>
+                      <th>HÀNH ĐỘNG</th>
+                      <th>MODULE</th>
+                      <th class="text-right">THỜI GIAN</th>
+                    </tr>
+                  </thead>
+                  <tbody id="overview-activity-table-body">
+                    <!-- JS Populated -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Syntax by Member (Right - 1fr) -->
+            <div class="dashboard-card">
+              <div class="card-header">
+                <div>
+                  <h3>Cú pháp theo thành viên</h3>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="backlink-distribution-list" id="overview-member-syntax">
+                  <!-- JS populated -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 3: Metric Distribution Cards (2 Breakdown Cards) -->
+          <div class="dashboard-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 20px;">
+            <div class="dashboard-card">
+              <div class="card-header">
+                <div>
+                  <h3>Bài viết theo phân khu</h3>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="status-progress-list" id="overview-article-progress">
+                  <!-- JS populated -->
+                </div>
+              </div>
+            </div>
+
+            <div class="dashboard-card">
+              <div class="card-header">
+                <div>
+                  <h3>Phân bổ nguồn backlink</h3>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="backlink-distribution-list" id="overview-backlink-types">
+                  <!-- JS populated -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- 2. PROMPTS VIEW -->
+        <section class="view-section" id="view-prompts">
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <select id="prompt-category-filter" class="form-select" onchange="renderPromptsView()">
+                <!-- Populated by JS -->
+              </select>
+            </div>
+            <div class="toolbar-right">
+              <div class="search-input-wrap">
+                <i class="ri-search-line"></i>
+                <input type="text" id="prompt-search" class="form-input" placeholder="Tìm Prompt, danh mục..." oninput="renderPromptsView()">
+              </div>
+              <button class="btn btn-primary" onclick="openCreatePromptModal()">
+                Thêm Prompt Mới
+              </button>
+            </div>
+          </div>
+
+          <!-- Prompts Grid -->
+          <div class="prompts-grid" id="prompts-container">
+            <!-- Rendered by JS -->
+          </div>
+        </section>
+
+
+        <!-- 3. ARTICLES (BÀI VIẾT) VIEW -->
+        <section class="view-section" id="view-articles">
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <button id="btn-note-article" class="btn-note-pill" onclick="openMemberNoteModal('articles')" style="display:none;" title="Ghi chú">
+                <span>Ghi chú</span>
+                <span id="btn-note-article-dot" class="note-dot" style="display:none;"></span>
+              </button>
+              <select id="article-member-filter" class="form-select" onchange="handleMemberFilterSelect('articles', this.value)">
+                <!-- Populated by JS -->
+              </select>
+              <select id="article-category-filter" class="form-select" onchange="handleCategorySelectChange('articles', this.value)">
+                <!-- Populated by JS -->
+              </select>
+            </div>
+            <div class="toolbar-right">
+              <div class="search-input-wrap">
+                <i class="ri-search-line"></i>
+                <input type="text" id="article-search" class="form-input" placeholder="Tìm bài viết, từ khóa..." oninput="renderArticlesView()">
+              </div>
+              <button id="btn-create-article" class="btn btn-primary" onclick="openCreateArticleModal()" style="display:none;">
+                Thêm Bài Viết Mới
+              </button>
+            </div>
+          </div>
+
+          <!-- Article Table View -->
+          <div class="table-container" id="articles-table-view">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>TIÊU ĐỀ BÀI VIẾT</th>
+                  <th>PHÂN KHU</th>
+                  <th>TỪ KHÓA CHÍNH</th>
+                  <th>LINK BÀI VIẾT</th>
+                  <th>THÀNH VIÊN</th>
+                  <th class="text-right">HÀNH ĐỘNG</th>
+                </tr>
+              </thead>
+              <tbody id="articles-table-body">
+                <!-- JS populated -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+
+        <!-- 4. BACKLINKS VIEW -->
+        <section class="view-section" id="view-backlinks">
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <button id="btn-note-backlinks" class="btn-note-pill" onclick="openMemberNoteModal('backlinks')" style="display:none;" title="Ghi chú">
+                <span>Ghi chú</span>
+                <span id="btn-note-backlinks-dot" class="note-dot" style="display:none;"></span>
+              </button>
+              <select id="backlink-member-filter" class="form-select" onchange="handleMemberFilterSelect('backlinks', this.value)">
+                <!-- Populated by JS -->
+              </select>
+              <select id="backlink-category-filter" class="form-select" onchange="handleCategorySelectChange('backlinks', this.value)">
+                <!-- Populated by JS -->
+              </select>
+            </div>
+            <div class="toolbar-right">
+              <div class="search-input-wrap">
+                <i class="ri-search-line"></i>
+                <input type="text" id="backlink-search" class="form-input" placeholder="Tìm Domain, Anchor Text..." oninput="renderBacklinksView()">
+              </div>
+              <button id="btn-create-backlink" class="btn btn-primary" onclick="openCreateBacklinkModal()">
+                Thêm Backlink Mới
+              </button>
+            </div>
+          </div>
+
+          <!-- Backlink Table -->
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>PHÂN KHU</th>
+                  <th>TỪ KHÓA CHÍNH</th>
+                  <th>LINK BÀI VIẾT</th>
+                  <th>BACKLINK</th>
+                  <th>THÀNH VIÊN</th>
+                  <th class="text-right">HÀNH ĐỘNG</th>
+                </tr>
+              </thead>
+              <tbody id="backlinks-table-body">
+                <!-- JS Populated -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+
+        <!-- 5. BACKLINK BLOGGER VIEW -->
+        <section class="view-section" id="view-backlinkBlogger">
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <button id="btn-note-backlinkBlogger" class="btn-note-pill" onclick="openMemberNoteModal('backlinkBlogger')" style="display:none;" title="Ghi chú">
+                <span>Ghi chú</span>
+                <span id="btn-note-backlinkBlogger-dot" class="note-dot" style="display:none;"></span>
+              </button>
+              <select id="backlinkBlogger-member-filter" class="form-select" onchange="handleMemberFilterSelect('backlinkBlogger', this.value)">
+                <!-- Populated by JS -->
+              </select>
+              <select id="backlinkBlogger-category-filter" class="form-select" onchange="handleCategorySelectChange('backlinkBlogger', this.value)">
+                <!-- Populated by JS -->
+              </select>
+            </div>
+            <div class="toolbar-right">
+              <div class="search-input-wrap">
+                <i class="ri-search-line"></i>
+                <input type="text" id="backlinkBlogger-search" class="form-input" placeholder="Tìm Domain Blogger, Anchor Text..." oninput="renderBacklinkBloggerView()">
+              </div>
+              <button id="btn-create-backlinkBlogger" class="btn btn-primary" onclick="openCreateBacklinkBloggerModal()">
+                Thêm Backlink Blogger Mới
+              </button>
+            </div>
+          </div>
+
+          <!-- Backlink Blogger Table -->
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>LINK BLOGGER</th>
+                  <th>PHÂN KHU</th>
+                  <th>TỪ KHÓA CHÍNH</th>
+                  <th>LINK BÀI VIẾT</th>
+                  <th>THÀNH VIÊN</th>
+                  <th>NGÀY</th>
+                  <th class="text-right">HÀNH ĐỘNG</th>
+                </tr>
+              </thead>
+              <tbody id="backlinkBlogger-table-body">
+                <!-- JS Populated -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+
+        <!-- 5. SYNTAX VIEW -->
+        <section class="view-section" id="view-syntax">
+          <div class="toolbar" id="syntax-toolbar">
+            <div class="toolbar-left">
+              <button id="btn-note-syntax" class="btn-note-pill" onclick="openMemberNoteModal('syntax')" style="display:none;" title="Ghi chú">
+                <span>Ghi chú</span>
+                <span id="btn-note-syntax-dot" class="note-dot" style="display:none;"></span>
+              </button>
+              <select id="syntax-member-filter" class="form-select" onchange="handleMemberFilterSelect('syntax', this.value)">
+                <!-- Populated by JS -->
+              </select>
+              <select id="syntax-category-filter" class="form-select" onchange="handleCategorySelectChange('syntax', this.value)">
+                <!-- Populated by JS -->
+              </select>
+            </div>
+            <div class="toolbar-right">
+              <div class="search-input-wrap">
+                <i class="ri-search-line"></i>
+                <input type="text" id="syntax-search" class="form-input" placeholder="Tìm Từ khóa, Link bài viết..." oninput="renderSyntaxView()">
+              </div>
+              <button id="btn-create-syntax" class="btn btn-primary" onclick="openCreateSyntaxModal()">
+                Thêm Cú Pháp Mới
+              </button>
+            </div>
+          </div>
+
+
+
+          <div class="syntax-generator-grid" id="syntax-generator-grid">
+            <!-- (1) CÚ PHÁP GOOGLE SEARCH -->
+            <div class="syntax-generator-card">
+              <div class="generator-header">
+                <div class="generator-header-title">
+                  <div>
+                    <h3>CÚ PHÁP GOOGLE SEARCH</h3>
+                  </div>
+                </div>
+              </div>
+
+              <div class="generator-body">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label style="font-weight: 600; font-size: 11.5px; color: var(--text-muted);">Thành viên xuất cú pháp:</label>
+                  <select id="gen-google-member-select" class="form-select">
+                    <!-- Populated by JS -->
+                  </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label>Từ khóa chính:</label>
+                  <input type="text" id="gen-google-kw" class="form-input" placeholder="Cho thuê The Opus One" value="Cho thuê The Opus One" onkeydown="if(event.key==='Enter') addGoogleSyntaxItem()">
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                  <label>Tên miền:</label>
+                  <input type="text" id="gen-google-domain" class="form-input" placeholder="vinhomesgrandparkvhgrp.com" value="vinhomesgrandparkvhgrp.com">
+                </div>
+
+                <button class="btn btn-primary" style="width: 100%; justify-content: center; margin-bottom: 16px;" onclick="addGoogleSyntaxItem()">
+                  Xuất Cú Pháp
+                </button>
+
+                <!-- Completed Syntaxes Output Box -->
+                <div class="generator-result-box">
+                  <div class="result-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span class="syntax-guide-label label-primary">Danh sách cú pháp:</span>
+                    <button class="btn-icon-only danger" onclick="clearGoogleSyntaxList()" title="Làm mới"><i class="ri-refresh-line"></i></button>
+                  </div>
+                  <div class="result-code-wrap" style="max-height: 160px; overflow-y: auto;">
+                    <code id="gen-google-output" style="white-space: pre-wrap;">https://www.google.com/ ###Cho thuê The Opus One, vinhomesgrandparkvhgrp.com!!!</code>
+                  </div>
+                  <div class="result-actions" style="display: flex; gap: 10px;">
+                    <button class="btn btn-secondary" style="flex: 1; justify-content: center;" onclick="exportGoogleSyntax()">
+                      Tải File .txt
+                    </button>
+                    <button class="btn btn-primary" style="flex: 1; justify-content: center;" onclick="copyGoogleSyntax()">
+                      Sao Chép
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- (2) CÚ PHÁP BACKLINK -->
+            <div class="syntax-generator-card">
+              <div class="generator-header">
+                <div class="generator-header-title">
+                  <div>
+                    <h3>CÚ PHÁP BACKLINK</h3>
+                  </div>
+                </div>
+              </div>
+
+              <div class="generator-body">
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label style="font-weight: 600; font-size: 11.5px; color: var(--text-muted);">Thành viên xuất cú pháp:</label>
+                  <select id="gen-backlink-member-select" class="form-select">
+                    <!-- Populated by JS -->
+                  </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label>Link Backlink:</label>
+                  <input type="text" id="gen-backlink-url" class="form-input" placeholder="https://sites.google.com/view/thetropical/vinhomesgrandpark" value="https://sites.google.com/view/thetropical/vinhomesgrandpark">
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                  <label>Từ khóa chính:</label>
+                  <input type="text" id="gen-backlink-kw" class="form-input" placeholder="The Tropical Vinhomes Grand Park" value="The Tropical Vinhomes Grand Park" onkeydown="if(event.key==='Enter') addBacklinkSyntaxItem()">
+                </div>
+
+                <button class="btn btn-success" style="width: 100%; justify-content: center; margin-bottom: 16px;" onclick="addBacklinkSyntaxItem()">
+                  Xuất Cú Pháp
+                </button>
+
+                <!-- Completed Syntaxes Output Box -->
+                <div class="generator-result-box">
+                  <div class="result-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span class="syntax-guide-label label-emerald">Danh sách cú pháp:</span>
+                    <button class="btn-icon-only danger" onclick="clearBacklinkSyntaxList()" title="Làm mới"><i class="ri-refresh-line"></i></button>
+                  </div>
+                  <div class="result-code-wrap" style="max-height: 160px; overflow-y: auto;">
+                    <code id="gen-backlink-output" style="white-space: pre-wrap;">https://sites.google.com/view/thetropical/vinhomesgrandpark ###The Tropical Vinhomes Grand Park!!!</code>
+                  </div>
+                  <div class="result-actions" style="display: flex; gap: 10px;">
+                    <button class="btn btn-secondary" style="flex: 1; justify-content: center;" onclick="exportBacklinkSyntax()">
+                      Tải File .txt
+                    </button>
+                    <button class="btn btn-success" style="flex: 1; justify-content: center;" onclick="copyBacklinkSyntax()">
+                      Sao Chép
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Syntax Data Table -->
+          <div class="table-container" id="syntax-table-container" style="margin-top: 20px;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>PHÂN LOẠI</th>
+                  <th>TỪ KHÓA CHÍNH</th>
+                  <th>CÚ PHÁP</th>
+                  <th>THÀNH VIÊN</th>
+                  <th class="text-right">HÀNH ĐỘNG</th>
+                </tr>
+              </thead>
+              <tbody id="syntax-table-body">
+                <!-- JS Populated -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+
+  <!-- MODALS -->
+
+  <!-- Modal: Xác Nhận Xóa Custom -->
+  <div class="modal-backdrop" id="modal-confirm-delete">
+    <div class="modal-content" style="max-width: 440px;">
+      <div class="modal-header" style="justify-content: center; position: relative; text-align: center;">
+        <h3 id="confirm-title" style="font-size: 14px; text-align: center; width: 100%;">XÁC NHẬN XÓA</h3>
+        <button class="btn-close" style="position: absolute; right: 16px;" onclick="closeModal('modal-confirm-delete')"><i class="ri-close-line"></i></button>
+      </div>
+      <div class="modal-body" style="padding: 24px 20px; text-align: center;">
+        <p id="confirm-message" style="font-family: 'Fira Code', 'Consolas', monospace; font-size: 13px; color: var(--text-main); line-height: 1.6; margin-bottom: 0;">
+          Bạn có chắc chắn muốn xóa mục này?
+        </p>
+      </div>
+      <div class="modal-footer" style="justify-content: center; gap: 12px; padding-bottom: 20px;">
+        <button type="button" class="btn btn-secondary" style="min-width: 90px;" onclick="closeModal('modal-confirm-delete')">Hủy</button>
+        <button type="button" class="btn btn-danger" style="min-width: 90px;" onclick="handleConfirmAccept()">Xóa</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Quản Lý & Thêm Thành Viên -->
+  <div class="modal-backdrop" id="modal-add-member">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>QUẢN LÝ & THÊM THÀNH VIÊN</h3>
+        <button class="btn-close" onclick="closeModal('modal-add-member')"><i class="ri-close-line"></i></button>
+      </div>
+      <div class="modal-body" style="padding-bottom: 12px;">
+        <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 8px;">
+          Danh sách thành viên hiện tại:
+        </label>
+        <div id="existing-members-list" class="existing-members-container">
+          <!-- Populated by JS with delete action -->
+        </div>
+
+        <form id="form-add-member" onsubmit="saveNewMember(event)">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label>Tên thành viên mới</label>
+            <input type="text" id="new-member-name-input" class="form-input" required placeholder="VD: Thành viên 5 hoặc Nguyễn Văn A">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-add-member')">Hủy</button>
+        <button type="submit" form="form-add-member" class="btn btn-primary">Thêm Thành Viên</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Create / Edit Prompt -->
+  <div class="modal-backdrop" id="modal-prompt">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-prompt-title">THÊM PROMPT AI MỚI</h3>
+        <button class="btn-close" onclick="closeModal('modal-prompt')"><i class="ri-close-line"></i></button>
+      </div>
+      <form id="form-prompt" onsubmit="savePrompt(event)">
+        <input type="hidden" id="prompt-id">
+        <div class="form-group">
+          <label>Tiêu đề Prompt</label>
+          <input type="text" id="prompt-title-input" class="form-input" required placeholder="VD: Lập dàn ý bài viết chuẩn SEO">
+        </div>
+        <div class="form-group">
+          <label>Danh mục</label>
+          <input type="text" id="prompt-category-input" class="form-input" required placeholder="VD: SEO & Keyword, Content, Social...">
+        </div>
+        <div class="form-group">
+          <label>Nội dung Prompt</label>
+          <textarea id="prompt-content-input" class="form-textarea" rows="7" required placeholder="Hãy viết một bài văn về {topic} với từ khóa chính là {keyword}..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-prompt')">Hủy</button>
+          <button type="submit" class="btn btn-primary">Lưu</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- Modal: Run / Fill Prompt Variables -->
+  <div class="modal-backdrop" id="modal-use-prompt">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3>ĐIỀN BIẾN & SỬ DỤNG PROMPT</h3>
+        <button class="btn-close" onclick="closeModal('modal-use-prompt')"><i class="ri-close-line"></i></button>
+      </div>
+      <div class="modal-body">
+        <h4 id="use-prompt-title" class="prompt-use-title">Prompt Title</h4>
+        <div class="variables-form-box" id="use-prompt-vars-container">
+          <!-- Dynamic Variable Inputs -->
+        </div>
+        <div class="form-group">
+          <label>Nội dung Prompt hoàn chỉnh:</label>
+          <textarea id="use-prompt-result" class="form-textarea readonly-code" rows="7" readonly></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-use-prompt')">Đóng</button>
+        <button type="button" class="btn btn-success" id="btn-copy-used-prompt" onclick="copyUsedPrompt()">
+          Sao chép Prompt
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Modal: Create / Edit Article -->
+  <div class="modal-backdrop" id="modal-article">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-article-title">THÊM BÀI VIẾT MỚI</h3>
+        <button class="btn-close" onclick="closeModal('modal-article')"><i class="ri-close-line"></i></button>
+      </div>
+      <form id="form-article" onsubmit="saveArticle(event)">
+        <input type="hidden" id="article-id">
+        <div class="form-group">
+          <label>Tiêu đề Bài viết</label>
+          <input type="text" id="article-title-input" class="form-input" required placeholder="VD: Hướng dẫn SEO Onpage 2026 từ A-Z">
+        </div>
+        <div class="form-row">
+          <div class="form-group col-flex-fill">
+            <label>Phân khu</label>
+            <select id="article-cat-input" class="form-select" required>
+              <!-- Populated by JS -->
+            </select>
+          </div>
+          <div class="form-group col-member">
+            <label>Thành viên</label>
+            <select id="article-member-input" class="form-select" required>
+              <!-- Populated by JS -->
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Từ khóa chính</label>
+          <input type="text" id="article-kw-input" class="form-input" required placeholder="VD: seo onpage 2026">
+        </div>
+        <div class="form-group">
+          <label>Link Bài viết</label>
+          <input type="url" id="article-url-input" class="form-input" placeholder="https://domain.com/bai-viet-seo">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-article')">Hủy</button>
+          <button type="submit" class="btn btn-primary">Lưu</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- Modal: Create / Edit Backlink -->
+  <div class="modal-backdrop" id="modal-backlink">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-backlink-title">THÊM BACKLINK MỚI</h3>
+        <button class="btn-close" onclick="closeModal('modal-backlink')"><i class="ri-close-line"></i></button>
+      </div>
+      <form id="form-backlink" onsubmit="saveBacklink(event)">
+        <input type="hidden" id="backlink-id">
+        <div class="form-row">
+          <div class="form-group col-flex-fill">
+            <label>Phân khu</label>
+            <select id="backlink-cat-input" class="form-select" required>
+              <!-- Populated by JS -->
+            </select>
+          </div>
+          <div class="form-group col-flex-fill">
+            <label>Từ khóa chính</label>
+            <input type="text" id="backlink-kw-input" class="form-input" required placeholder="VD: dịch vụ seo uy tín">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-flex-fill">
+            <label>Link Bài viết</label>
+            <input type="url" id="backlink-target-input" class="form-input" required placeholder="https://mysite.com/trang-dich">
+          </div>
+          <div class="form-group col-member">
+            <label>Thành viên</label>
+            <select id="backlink-member-input" class="form-select" required>
+              <!-- Populated by JS -->
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Backlink 1</label>
+          <input type="url" id="backlink-source1-input" class="form-input" required placeholder="https://website-doi-tac-1.com/bai-viet">
+        </div>
+        <div class="form-group">
+          <label>Backlink 2</label>
+          <input type="url" id="backlink-source2-input" class="form-input" placeholder="https://website-doi-tac-2.com/bai-viet">
+        </div>
+        <div class="form-group">
+          <label>Backlink 3</label>
+          <input type="url" id="backlink-source3-input" class="form-input" placeholder="https://website-doi-tac-3.com/bai-viet">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-backlink')">Hủy</button>
+          <button type="submit" class="btn btn-primary">Lưu</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- Modal: Manage Backlink Categories -->
+  <div class="modal-backdrop" id="modal-manage-backlink-cat">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>QUẢN LÝ PHÂN KHU BACKLINK</h3>
+        <button class="btn-close" onclick="closeModal('modal-manage-backlink-cat')"><i class="ri-close-line"></i></button>
+      </div>
+      <div class="modal-body">
+        <label style="display: block; font-weight: 600; font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
+          Danh sách Phân khu hiện tại
+        </label>
+        <div id="existing-backlink-cat-list" class="existing-members-container">
+          <!-- Populated by JS -->
+        </div>
+
+        <form id="form-add-backlink-cat" onsubmit="saveNewCategory('backlinks', event)">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label>Tên Phân khu mới</label>
+            <input type="text" id="new-backlink-cat-input" class="form-input" required placeholder="VD: SEO Offpage, Guest Post, PBN Network...">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-manage-backlink-cat')">Đóng</button>
+        <button type="submit" form="form-add-backlink-cat" class="btn btn-primary">Thêm Phân Khu</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Modal: Manage Article Categories -->
+  <div class="modal-backdrop" id="modal-manage-article-cat">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>QUẢN LÝ PHÂN KHU BÀI VIẾT</h3>
+        <button class="btn-close" onclick="closeModal('modal-manage-article-cat')"><i class="ri-close-line"></i></button>
+      </div>
+      <div class="modal-body">
+        <label style="display: block; font-weight: 600; font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
+          Danh sách Phân khu hiện tại
+        </label>
+        <div id="existing-article-cat-list" class="existing-members-container">
+          <!-- Populated by JS -->
+        </div>
+
+        <form id="form-add-article-cat" onsubmit="saveNewCategory('articles', event)">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label>Tên Phân khu mới</label>
+            <input type="text" id="new-article-cat-input" class="form-input" required placeholder="VD: Dịch vụ SEO, Kiến thức WordPress...">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-manage-article-cat')">Đóng</button>
+        <button type="submit" form="form-add-article-cat" class="btn btn-primary">Thêm Phân Khu</button>
+      </div>
+    </div>
+  </div>
+
+
+
+
+
+  <!-- Modal: Manage Backlink Blogger Categories -->
+  <div class="modal-backdrop" id="modal-manage-backlinkBlogger-cat">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>QUẢN LÝ PHÂN KHU BLOGGER</h3>
+        <button class="btn-close" onclick="closeModal('modal-manage-backlinkBlogger-cat')"><i class="ri-close-line"></i></button>
+      </div>
+      <div class="modal-body">
+        <label style="display: block; font-weight: 600; font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
+          Danh sách Phân khu hiện tại
+        </label>
+        <div id="existing-backlinkBlogger-cat-list" class="existing-members-container">
+          <!-- Populated by JS -->
+        </div>
+
+        <form id="form-add-backlinkBlogger-cat" onsubmit="saveNewCategory('backlinkBlogger', event)">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label>Tên Phân khu mới</label>
+            <input type="text" id="new-backlinkBlogger-cat-input" class="form-input" required placeholder="VD: SEO, Content, Blogger Free...">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-manage-backlinkBlogger-cat')">Đóng</button>
+        <button type="submit" form="form-add-backlinkBlogger-cat" class="btn btn-primary">Thêm Phân Khu</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Modal: Create / Edit Backlink Blogger -->
+  <div class="modal-backdrop" id="modal-backlinkBlogger">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3 id="modal-backlinkBlogger-title">THÊM BACKLINK BLOGGER MỚI</h3>
+        <button class="btn-close" onclick="closeModal('modal-backlinkBlogger')"><i class="ri-close-line"></i></button>
+      </div>
+      <form id="form-backlinkBlogger" onsubmit="saveBacklinkBlogger(event)">
+        <input type="hidden" id="backlinkBlogger-id">
+
+        <div class="form-row">
+          <div class="form-group col-flex-fill">
+            <label>Link Blogger</label>
+            <input type="url" id="backlinkBlogger-blogger-url-input" class="form-input" required placeholder="https://myblog.blogspot.com/bai-viet">
+          </div>
+          <div class="form-group" style="flex: 0 0 180px; max-width: 180px;">
+            <label>Phân khu</label>
+            <select id="backlinkBlogger-category-input" class="form-select" required>
+              <!-- Populated by JS -->
+            </select>
+          </div>
+          <div class="form-group col-member">
+            <label>Thành viên</label>
+            <select id="backlinkBlogger-member-input" class="form-select" required>
+              <!-- Populated by JS -->
+            </select>
+          </div>
+          <div class="form-group" style="flex: 0 0 140px; max-width: 140px;">
+            <label>Ngày</label>
+            <input type="date" id="backlinkBlogger-date-input" class="form-input" required>
+          </div>
+        </div>
+
+        <!-- Pair 1 -->
+        <div class="form-row">
+          <div class="form-group col-6">
+            <label>Từ khóa chính 1</label>
+            <input type="text" id="backlinkBlogger-kw1-input" class="form-input" placeholder="VD: dịch vụ seo uy tín">
+          </div>
+          <div class="form-group col-6">
+            <label>Link Bài viết 1</label>
+            <input type="url" id="backlinkBlogger-target1-input" class="form-input" placeholder="https://mysite.com/bai-viet-1">
+          </div>
+        </div>
+
+        <!-- Pair 2 -->
+        <div class="form-row">
+          <div class="form-group col-6">
+            <label>Từ khóa chính 2</label>
+            <input type="text" id="backlinkBlogger-kw2-input" class="form-input" placeholder="VD: báo giá seo 2026">
+          </div>
+          <div class="form-group col-6">
+            <label>Link Bài viết 2</label>
+            <input type="url" id="backlinkBlogger-target2-input" class="form-input" placeholder="https://mysite.com/bai-viet-2">
+          </div>
+        </div>
+
+        <!-- Pair 3 -->
+        <div class="form-row">
+          <div class="form-group col-6">
+            <label>Từ khóa chính 3</label>
+            <input type="text" id="backlinkBlogger-kw3-input" class="form-input" placeholder="VD: đào tạo seo tphcm">
+          </div>
+          <div class="form-group col-6">
+            <label>Link Bài viết 3</label>
+            <input type="url" id="backlinkBlogger-target3-input" class="form-input" placeholder="https://mysite.com/bai-viet-3">
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-backlinkBlogger')">Hủy</button>
+          <button type="submit" class="btn btn-primary">Lưu</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- Modal: Manage Syntax Categories -->
+  <div class="modal-backdrop" id="modal-manage-syntax-cat">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>QUẢN LÝ PHÂN KHU CÚ PHÁP</h3>
+        <button class="btn-close" onclick="closeModal('modal-manage-syntax-cat')"><i class="ri-close-line"></i></button>
+      </div>
+      <div class="modal-body">
+        <label style="display: block; font-weight: 600; font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
+          Danh sách Phân khu hiện tại
+        </label>
+        <div id="existing-syntax-cat-list" class="existing-members-container">
+          <!-- Populated by JS -->
+        </div>
+
+        <form id="form-add-syntax-cat" onsubmit="saveNewCategory('syntax', event)">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label>Tên Phân khu mới</label>
+            <input type="text" id="new-syntax-cat-input" class="form-input" required placeholder="VD: Dịch vụ SEO, Bất động sản, SEO Offpage...">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modal-manage-syntax-cat')">Đóng</button>
+        <button type="submit" form="form-add-syntax-cat" class="btn btn-primary">Thêm Phân Khu</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Modal: Create / Edit Syntax (Từ khóa chính, Link bài viết 1 link, 3 Cú pháp) -->
+  <div class="modal-backdrop" id="modal-syntax">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3 id="modal-syntax-title">THÊM CÚ PHÁP MỚI</h3>
+        <button class="btn-close" onclick="closeModal('modal-syntax')"><i class="ri-close-line"></i></button>
+      </div>
+      <form id="form-syntax" onsubmit="saveSyntax(event)">
+        <input type="hidden" id="syntax-id">
+
+        <div class="form-row">
+          <div class="form-group col-6">
+            <label>Phân loại</label>
+            <select id="syntax-type-input" class="form-select" required>
+              <option value="Google Search">Google Search</option>
+              <option value="Backlink">Backlink</option>
+            </select>
+          </div>
+          <div class="form-group col-6">
+            <label>Thành viên</label>
+            <select id="syntax-member-input" class="form-select" required>
+              <!-- Populated by JS -->
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Từ khóa chính</label>
+          <input type="text" id="syntax-kw-input" class="form-input" required placeholder="VD: Cho thuê The Opus One">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label style="font-weight: 700; font-size: 12px; text-transform: uppercase; color: var(--primary);">
+            Vùng dán cú pháp:
+          </label>
+          <textarea id="syntax-pasted-input" class="form-input" rows="4" style="font-family: var(--font-code), 'Consolas', monospace; font-size: 12px; line-height: 1.5; white-space: pre-wrap; min-height: 100px; resize: vertical;" placeholder="Dán các dòng cú pháp từ trang chính vào đây...&#10;Tự động nhận diện Phân loại (Google Search / Backlink) & Từ khóa chính!" oninput="handleSyntaxAutoParse(event)" required></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-syntax')">Hủy</button>
+          <button type="submit" class="btn btn-primary">Lưu Cú Pháp</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- Modal: Member Note -->
+  <div class="modal-backdrop" id="modal-member-note">
+    <div class="modal-content" style="max-width: 560px;">
+      <div class="modal-header">
+        <h3 id="modal-note-title">GHI CHÚ</h3>
+        <button class="btn-close" onclick="closeMemberNoteModal()"><i class="ri-close-line"></i></button>
+      </div>
+      <div class="modal-body" style="padding: 20px;">
+        <textarea
+          id="modal-note-area"
+          class="form-textarea member-note-area-modal"
+          rows="10"
+          placeholder="Nhập ghi chú, nhắc nhở, kế hoạch..."
+        ></textarea>
+      </div>
+      <div class="modal-footer" style="justify-content: flex-end; gap: 10px;">
+        <button type="button" class="btn btn-secondary" onclick="closeMemberNoteModal()">Đóng</button>
+        <button type="button" class="btn btn-primary" onclick="saveMemberNoteModal()">Lưu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FULLSCREEN LOGIN SCREEN OVERLAY (FIREBASE READY) -->
+  <div class="login-screen-backdrop" id="login-screen">
+    <div class="login-card-container">
+      <div class="login-card-header">
+        <div class="login-brand-icon">
+          <i class="ri-rocket-2-fill"></i>
+        </div>
+        <h2>TaskFlow</h2>
+      </div>
+
+      <form id="form-login" onsubmit="handleLoginSubmit(event)">
+        <div class="form-group">
+          <label>Email / Tên Đăng Nhập</label>
+          <div class="input-with-icon">
+            <i class="ri-mail-line input-icon"></i>
+            <input type="email" id="login-email" class="form-input" required placeholder="admin@taskflow.com" autocomplete="username">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Mật Khẩu</label>
+          <div class="input-with-icon">
+            <i class="ri-lock-2-line input-icon"></i>
+            <input type="password" id="login-password" class="form-input" required placeholder="••••••••" autocomplete="current-password">
+            <button type="button" class="btn-toggle-pwd" onclick="toggleLoginPasswordVisibility()" title="Hiện/Ẩn Mật khẩu">
+              <i class="ri-eye-off-line" id="pwd-toggle-icon"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="login-options-row">
+          <label class="remember-me-checkbox">
+            <input type="checkbox" id="login-remember" checked>
+            <span>Ghi nhớ đăng nhập</span>
+          </label>
+          <a href="#" class="forgot-pwd-link" onclick="handleForgotPassword(event)">Quên mật khẩu?</a>
+        </div>
+
+        <!-- Thông báo lỗi đăng nhập -->
+        <div id="login-error-msg" style="display:none; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4); color: #f87171; border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; font-size: 13px; text-align: center;">
+          <i class="ri-error-warning-line" style="margin-right: 6px;"></i>
+          <span id="login-error-text">Email hoặc Mật khẩu không chính xác!</span>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-login-submit" id="btn-login-submit">
+          <span>Đăng Nhập</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Firebase SDK v10 (Realtime Cloud Sync & Auth) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <script src="app.js"></script>
+</body>
+</html>

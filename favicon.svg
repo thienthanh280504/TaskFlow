@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+  </defs>
+  <!-- Rounded Purple Square -->
+  <rect width="64" height="64" rx="18" fill="url(#brandGrad)"/>
+  
+  <!-- Exact ri-rocket-2-fill Rocket Shape -->
+  <g fill="#ffffff">
+    <!-- Rocket Main Dome Body -->
+    <path d="M22 39 C22 24 25 15 32 15 C39 15 42 24 42 39 Z"/>
+    <!-- Wide Flanged Base -->
+    <path d="M19 39 C19 37.5 20.5 36.5 22 36.5 L42 36.5 C43.5 36.5 45 37.5 45 39 L45 42 C45 43.5 43.5 44.5 42 44.5 L22 44.5 C20.5 44.5 19 43.5 19 42 Z"/>
+    <!-- Thruster Flame -->
+    <polygon points="26,44.5 38,44.5 32,54"/>
+  </g>
+  
+  <!-- Circular Window Cutout -->
+  <circle cx="32" cy="27" r="3.5" fill="#4f46e5"/>
+</svg>
