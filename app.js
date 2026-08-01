@@ -25,28 +25,57 @@ function initFirebase() {
       }
       db = firebase.firestore();
       auth = firebase.auth();
-      console.log("🔥 Firebase initialized successfully for TaskFlow (Realtime Cloud Database)");
-      
+      console.log("Firebase initialized for TaskFlow");
+
       auth.onAuthStateChanged((user) => {
         if (user) {
-          console.log("🔥 Firebase Auth user connected:", user.email);
+          console.log("Firebase Auth connected:", user.email);
           setupFirebaseRealtimeListeners();
+        } else {
+          // Tai khoan bi xoa tren Firebase hoac dang xuat
+          if (state.currentUser) {
+            const deletedEmail = state.currentUser.email;
+
+            // TU DONG XOA KHOI DANH SACH THANH VIEN TREN FIRESTORE
+            // -> tat ca nguoi dung khac se thay workspace bien mat ngay lap tuc (qua onSnapshot)
+            if (db && deletedEmail) {
+              db.collection('app_settings').doc('members').get().then((doc) => {
+                if (doc.exists) {
+                  const currentList = doc.data().list || [];
+                  const newList = currentList.filter(m => 
+                    m && m.email && m.email.toLowerCase().trim() !== deletedEmail.toLowerCase().trim()
+                  );
+                  if (newList.length !== currentList.length) {
+                    db.collection('app_settings').doc('members').set(
+                      { list: newList },
+                      { merge: true }
+                    ).catch(() => {});
+                  }
+                }
+              }).catch(() => {});
+            }
+
+            // Xoa phien dang nhap cuc bo
+            sessionStorage.removeItem('taskflow_current_user');
+            localStorage.removeItem('taskflow_members');
+            state.currentUser = null;
+            state.members = [];
+            updateCurrentUserBadge();
+            renderSubmenus();
+            openLoginScreen();
+            showToast('Tai khoan da bi xoa. Vui long lien he quan tri vien.', 'danger');
+          }
         }
       });
 
-      setupFirebaseRealtimeListeners();
     } catch (err) {
       console.warn("Firebase Init Notice:", err.message);
     }
   }
 }
 
-const DEFAULT_MEMBERS = [
-  { id: 'm1', name: 'Thanh', email: 'thanh@taskflow.com' },
-  { id: 'm2', name: 'Vang', email: 'vang@taskflow.com' },
-  { id: 'm3', name: 'Thành viên 3', email: 'thanhvien3@taskflow.com' },
-  { id: 'm4', name: 'Thành viên 4', email: 'thanhvien4@taskflow.com' }
-];
+// Thanh vien duoc tai tu Firebase Cloud — khong co du lieu cung trong code
+const DEFAULT_MEMBERS = [];
 
 const DEFAULT_CATEGORIES = [
   'Dịch vụ SEO',
@@ -73,79 +102,12 @@ const DEFAULT_SYNTAX_CATEGORIES = ['SEO Google', 'Bất động sản'];
 const DEFAULT_GOOGLE_SYNTAX_MAP = {};
 const DEFAULT_BACKLINK_SYNTAX_MAP = {};
 
-// Default Starting Data Arrays (Ensures Dashboard is never blank or showing zeroes)
-const DEFAULT_PROMPTS = [
-  {
-    id: 'p1',
-    title: 'Lập Dàn Ý Bài Viết Chuẩn SEO 2026',
-    category: 'Content',
-    content: 'Hãy viết dàn ý chi tiết bài viết SEO cho chủ đề {topic} với từ khóa chính là {keyword}. Bao gồm các thẻ H2, H3 và phân tích ý định tìm kiếm.',
-    favorite: true
-  },
-  {
-    id: 'p2',
-    title: 'Viết Đoạn Mở Đầu Thu Hút (SEO Hook)',
-    category: 'Content',
-    content: 'Viết đoạn mở bài 150 từ thu hút độc giả về chủ đề {topic}, lồng ghép tự nhiên từ khóa {keyword}.',
-    favorite: false
-  }
-];
-
-const DEFAULT_ARTICLES = [
-  {
-    id: 'a1',
-    memberId: 'm1',
-    title: 'Hướng Dẫn SEO Onpage Chuẩn 2026 Từ A-Z',
-    category: 'Dịch vụ SEO',
-    primaryKeyword: 'seo onpage 2026',
-    publishedUrl: 'https://vinhomesgrandparkvhgrp.com/seo-onpage-2026',
-    status: 'Published'
-  },
-  {
-    id: 'a2',
-    memberId: 'm2',
-    title: 'Bảng Giá Cho Thuê Căn Hộ The Opus One Mới Nhất',
-    category: 'Bất động sản',
-    primaryKeyword: 'Cho thuê The Opus One',
-    publishedUrl: 'https://vinhomesgrandparkvhgrp.com/cho-thue-the-opus-one',
-    status: 'Published'
-  }
-];
-
-const DEFAULT_BACKLINKS = [
-  {
-    id: 'b1',
-    memberId: 'm1',
-    category: 'SEO Offpage',
-    primaryKeyword: 'dịch vụ seo uy tín',
-    targetUrl: 'https://vinhomesgrandparkvhgrp.com/dich-vu-seo',
-    backlinks: ['https://medium.com/@seomaster/bai-viet-1', 'https://sites.google.com/view/seo-offpage/link1']
-  }
-];
-
-const DEFAULT_BACKLINK_BLOGGER = [
-  {
-    id: 'bb1',
-    memberId: 'm2',
-    bloggerUrl: 'https://canhotheopusone.blogspot.com/2026/08/cho-thue-opus-one.html',
-    category: 'Bất động sản',
-    date: '2026-08-01',
-    items: [
-      { kw: 'Cho thuê The Opus One', url: 'https://vinhomesgrandparkvhgrp.com/cho-thue-the-opus-one' }
-    ]
-  }
-];
-
-const DEFAULT_SYNTAX = [
-  {
-    id: 's1',
-    memberId: 'm1',
-    type: 'Google Search',
-    primaryKeyword: 'Cho thuê The Opus One',
-    syntaxes: ['https://www.google.com/ ###Cho thuê The Opus One, vinhomesgrandparkvhgrp.com!!!']
-  }
-];
-
+// Du lieu trong — toan bo du lieu lay tu Firebase Cloud
+const DEFAULT_PROMPTS = [];
+const DEFAULT_ARTICLES = [];
+const DEFAULT_BACKLINKS = [];
+const DEFAULT_BACKLINK_BLOGGER = [];
+const DEFAULT_SYNTAX = [];
 const DEFAULT_ACTIVITIES = [];
 
 // App State
@@ -304,41 +266,31 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function loadDataFromStorage() {
-  const savedMembers = JSON.parse(localStorage.getItem('taskflow_members'));
-  if (Array.isArray(savedMembers) && savedMembers.length > 0) {
-    state.members = savedMembers;
-  } else {
-    state.members = [...DEFAULT_MEMBERS];
+  // Xoa cache cu - bat dau phien lam viec moi
+  const SCHEMA_VER = 'v_fresh_2026_08';
+  if (localStorage.getItem('taskflow_schema_ver') !== SCHEMA_VER) {
+    ['taskflow_members','taskflow_prompts','taskflow_articles','taskflow_backlinks',
+     'taskflow_backlinkBlogger','taskflow_syntax','taskflow_activities',
+     'taskflow_google_syntax_map','taskflow_backlink_syntax_map',
+     'taskflow_categories'].forEach(k => localStorage.removeItem(k));
+    localStorage.setItem('taskflow_schema_ver', SCHEMA_VER);
+    sessionStorage.removeItem('taskflow_current_user');
   }
 
-  state.prompts = JSON.parse(localStorage.getItem('taskflow_prompts')) || [...DEFAULT_PROMPTS];
-  state.articles = JSON.parse(localStorage.getItem('taskflow_articles')) || [...DEFAULT_ARTICLES];
-  state.backlinks = JSON.parse(localStorage.getItem('taskflow_backlinks')) || [...DEFAULT_BACKLINKS];
-  state.backlinkBlogger = JSON.parse(localStorage.getItem('taskflow_backlinkBlogger')) || [...DEFAULT_BACKLINK_BLOGGER];
+  state.members = JSON.parse(localStorage.getItem('taskflow_members')) || [];
+  state.prompts = JSON.parse(localStorage.getItem('taskflow_prompts')) || [];
+  state.articles = JSON.parse(localStorage.getItem('taskflow_articles')) || [];
+  state.backlinks = JSON.parse(localStorage.getItem('taskflow_backlinks')) || [];
+  state.backlinkBlogger = JSON.parse(localStorage.getItem('taskflow_backlinkBlogger')) || [];
   state.currentUser = JSON.parse(sessionStorage.getItem('taskflow_current_user')) || null;
-  state.syntax = JSON.parse(localStorage.getItem('taskflow_syntax')) || [...DEFAULT_SYNTAX];
+  state.syntax = JSON.parse(localStorage.getItem('taskflow_syntax')) || [];
   state.categories = JSON.parse(localStorage.getItem('taskflow_categories')) || DEFAULT_CATEGORIES;
-  state.googleSyntaxMap = JSON.parse(localStorage.getItem('taskflow_google_syntax_map')) || DEFAULT_GOOGLE_SYNTAX_MAP;
-  state.backlinkSyntaxMap = JSON.parse(localStorage.getItem('taskflow_backlink_syntax_map')) || DEFAULT_BACKLINK_SYNTAX_MAP;
-  
+  state.googleSyntaxMap = JSON.parse(localStorage.getItem('taskflow_google_syntax_map')) || {};
+  state.backlinkSyntaxMap = JSON.parse(localStorage.getItem('taskflow_backlink_syntax_map')) || {};
+
   const now = Date.now();
-  state.activities = (JSON.parse(localStorage.getItem('taskflow_activities')) || DEFAULT_ACTIVITIES)
+  state.activities = (JSON.parse(localStorage.getItem('taskflow_activities')) || [])
     .filter(a => now - (a.createdAt || 0) < 10000);
-
-  // Đảm bảo dữ liệu mặc định luôn sẵn sàng nếu mảng rỗng
-  if (!state.articles || state.articles.length === 0) state.articles = [...DEFAULT_ARTICLES];
-  if (!state.prompts || state.prompts.length === 0) state.prompts = [...DEFAULT_PROMPTS];
-  if (!state.backlinks || state.backlinks.length === 0) state.backlinks = [...DEFAULT_BACKLINKS];
-  if (!state.backlinkBlogger || state.backlinkBlogger.length === 0) state.backlinkBlogger = [...DEFAULT_BACKLINK_BLOGGER];
-  if (!state.syntax || state.syntax.length === 0) state.syntax = [...DEFAULT_SYNTAX];
-
-  // Migrate missing memberId to m1 if any
-  state.articles.forEach(a => { if (!a.memberId) a.memberId = 'm1'; });
-  state.backlinks.forEach(b => { if (!b.memberId) b.memberId = 'm1'; });
-  state.backlinkBlogger.forEach(b => { if (!b.memberId) b.memberId = 'm1'; });
-  state.syntax.forEach(s => { if (!s.memberId) s.memberId = 'm1'; });
-
-  saveDataToStorage();
 }
 
 function saveDataToStorage() {
@@ -694,10 +646,6 @@ function renderExistingMembersList() {
 }
 
 function deleteMember(memberId) {
-  if (state.members.length <= 1) {
-    showToast('Phải giữ lại ít nhất 1 thành viên.', 'danger');
-    return;
-  }
   const m = state.members.find(x => x.id === memberId);
   if (!m) return;
 
@@ -2846,38 +2794,43 @@ function handleForgotPassword(e) {
   showToast('Vui lòng liên hệ Quản trị viên (Admin) để khôi phục mật khẩu!', 'amber');
 }
 
-function findOrCreateMember(email) {
+function findOrCreateMember(email, firebaseUid) {
   const cleanEmail = (email || '').toLowerCase().trim();
   const rawPrefix = cleanEmail.split('@')[0];
   const normPrefix = normalizeStr(rawPrefix);
 
-  // 1. Tìm theo email chuẩn
+  // 1. Tim theo email chinh xac
   let matched = state.members.find(m => m && m.email && m.email.toLowerCase().trim() === cleanEmail);
-  if (matched) return matched;
+  if (matched) {
+    // Cap nhat Firebase UID neu chua co
+    if (firebaseUid && !matched.uid) {
+      matched.uid = firebaseUid;
+      saveDataToStorage();
+      if (db) db.collection('app_settings').doc('members').set({ list: state.members }, { merge: true }).catch(() => {});
+    }
+    return matched;
+  }
 
-  // 2. Tìm theo tên thành viên
+  // 2. Tim theo ten thanh vien
   let matchedByName = state.members.find(m => m && m.name && normalizeStr(m.name) === normPrefix);
   if (matchedByName) {
     matchedByName.email = cleanEmail;
+    if (firebaseUid) matchedByName.uid = firebaseUid;
     saveDataToStorage();
-    if (db) {
-      db.collection('app_settings').doc('members').set({ list: state.members }, { merge: true })
-        .catch(err => console.log('Sync members error:', err.message));
-    }
+    if (db) db.collection('app_settings').doc('members').set({ list: state.members }, { merge: true }).catch(() => {});
     return matchedByName;
   }
 
-  // 3. TỰ ĐỘNG TẠO NƠI LÀM VIỆC MỚI khi tài khoản Firebase mới đăng nhập!
+  // 3. Tu dong tao noi lam viec moi khi tai khoan Firebase dang nhap lan dau
   const displayName = rawPrefix.charAt(0).toUpperCase() + rawPrefix.slice(1);
   const newId = 'm_' + Date.now();
-  const newMember = { id: newId, name: displayName, email: cleanEmail };
+  const newMember = { id: newId, name: displayName, email: cleanEmail, uid: firebaseUid || null };
 
   state.members.push(newMember);
   saveDataToStorage();
 
   if (db) {
-    db.collection('app_settings').doc('members').set({ list: state.members }, { merge: true })
-      .catch(err => console.log('Sync members error:', err.message));
+    db.collection('app_settings').doc('members').set({ list: state.members }, { merge: true }).catch(() => {});
   }
 
   renderSubmenus();
@@ -2897,21 +2850,24 @@ async function handleLoginSubmit(e) {
     return;
   }
 
-  // Chuẩn hóa định dạng Email (nếu nhập username không có @, tự động gắn domain mặc định)
-  const email = rawEmail.includes('@') ? rawEmail.toLowerCase().trim() : `${normalizeStr(rawEmail)}@taskflow.com`;
+  // Chuẩn hóa Email (nếu nhập username không có @, tự động gắn domain)
+  const email = rawEmail.includes('@')
+    ? rawEmail.toLowerCase().trim()
+    : `${normalizeStr(rawEmail)}@taskflow.com`;
 
   const submitBtn = document.getElementById('btn-login-submit');
   const errorBox = document.getElementById('login-error-msg');
   const errorText = document.getElementById('login-error-text');
+
   if (errorBox) errorBox.style.display = 'none';
   if (submitBtn) {
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span>Đang xác thực...</span>';
   }
 
-  // Kiểm tra nếu tài khoản đã bị xóa khỏi hệ thống
+  // Kiểm tra tài khoản bị xóa
   if (state.deletedMembers && state.deletedMembers.includes(email)) {
-    let msg = 'Tài khoản này đã bị Admin xóa khỏi hệ thống!';
+    const msg = 'Tài khoản này đã bị Admin xóa khỏi hệ thống!';
     showToast(msg, 'danger');
     if (errorText) errorText.textContent = msg;
     if (errorBox) errorBox.style.display = 'block';
@@ -2919,79 +2875,78 @@ async function handleLoginSubmit(e) {
     return;
   }
 
-  let authenticated = false;
-  if (auth && typeof auth.signInWithEmailAndPassword === 'function') {
-    try {
-      await auth.signInWithEmailAndPassword(email, password);
-      authenticated = true;
-    } catch (error) {
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-        // Tự động khởi tạo tài khoản mới nếu mật khẩu đủ 6 ký tự
-        if (password.length >= 6) {
-          try {
-            await auth.createUserWithEmailAndPassword(email, password);
+  try {
+    let authenticated = false;
+    let firebaseUid = null;
+
+    if (auth && typeof auth.signInWithEmailAndPassword === 'function') {
+      try {
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        authenticated = true;
+        firebaseUid = userCredential.user ? userCredential.user.uid : null;
+      } catch (firebaseErr) {
+        const code = firebaseErr.code || '';
+        if (code === 'auth/network-request-failed') {
+          const cached = JSON.parse(sessionStorage.getItem('taskflow_current_user'));
+          if (cached) {
             authenticated = true;
-          } catch (createErr) {
-            console.log("Auto-register fallback error:", createErr.message);
+          } else {
+            throw firebaseErr;
           }
+        } else {
+          throw firebaseErr;
         }
-      } else if (error.code === 'auth/network-request-failed') {
-        authenticated = true; // Cho phép đăng nhập offline khi mất mạng
-      } else {
-        console.error('Firebase Auth Exception:', error);
       }
+    } else {
+      authenticated = true;
     }
-  } else {
-    authenticated = true;
-  }
 
-  if (!authenticated) {
-    let msg = 'Sai mật khẩu hoặc tài khoản chưa đúng! (Mật khẩu cần từ 6 ký tự trở lên)';
-    showToast(msg, 'danger');
-    if (errorText) errorText.textContent = msg;
-    if (errorBox) errorBox.style.display = 'block';
-    if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '<span>Đăng Nhập</span>'; }
-    return;
-  }
+    if (!authenticated) {
+      const msg = 'Sai mat khau hoac tai khoan chua ton tai!';
+      showToast(msg, 'danger');
+      if (errorText) errorText.textContent = msg;
+      if (errorBox) errorBox.style.display = 'block';
+      return;
+    }
 
-  // Tìm hoặc tạo thành viên mới từ email đăng nhập
-  let member = findOrCreateMember(email);
+    // Tim hoac tao thanh vien tu email + Firebase UID
+    const member = findOrCreateMember(email, firebaseUid);
+    state.currentUser = {
+      email: email,
+      name: member.name,
+      memberId: member.id,
+      uid: firebaseUid
+    };
 
-  state.currentUser = {
-    email: email,
-    name: member.name,
-    memberId: member.id
-  };
+    // Lưu phiên vào sessionStorage (F5 không mất, đóng tab mới đăng nhập lại)
+    sessionStorage.setItem('taskflow_current_user', JSON.stringify(state.currentUser));
+    updateCurrentUserBadge();
+    closeLoginScreen();
+    renderSubmenus();
+    renderMemberSelectOptions();
+    renderAllViews();
 
-  // Lưu vào sessionStorage (F5 không mất, đóng trình duyệt mới phải đăng nhập lại)
-  sessionStorage.setItem('taskflow_current_user', JSON.stringify(state.currentUser));
-  updateCurrentUserBadge();
-  closeLoginScreen();
-  renderSubmenus();
-  renderMemberSelectOptions();
-  renderAllViews();
+    if (emailInput) emailInput.value = '';
+    if (pwdInput) pwdInput.value = '';
 
-  if (emailInput) emailInput.value = '';
-  if (pwdInput) pwdInput.value = '';
+    showToast(`Đăng nhập thành công! Chào mừng ${member.name}.`, 'success');
+    logMemberActivity(member.id, 'Đăng Nhập', 'Đăng nhập vào hệ thống', 'Hệ thống');
 
-  showToast(`Đăng nhập thành công! Chào mừng ${state.currentUser.name}.`, 'success');
-  logMemberActivity(member.id, 'Đăng Nhập', 'Đăng nhập vào hệ thống', 'Hệ thống');
   } catch (error) {
-    console.error('Lỗi đăng nhập Firebase:', error);
+    console.error('Lỗi đăng nhập:', error);
     let msg = 'Email hoặc Mật khẩu không chính xác!';
     if (error.code === 'auth/operation-not-allowed') {
-      msg = 'Chưa bật Email/Password trong Firebase Console! Vào Authentication → Sign-in method → Bật Email/Password.';
+      msg = 'Chưa bật Email/Password trong Firebase Console!';
     } else if (error.code === 'auth/user-not-found') {
-      msg = 'Tài khoản này đã bị xóa trên Firebase hoặc chưa được cấp quyền truy cập!';
+      msg = 'Tài khoản chưa được cấp quyền truy cập!';
     } else if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-      msg = 'Sai mật khẩu hoặc tài khoản đã bị xóa trên Firebase!';
+      msg = 'Sai mật khẩu! Vui lòng kiểm tra lại.';
     } else if (error.code === 'auth/too-many-requests') {
       msg = 'Đăng nhập sai quá nhiều lần. Vui lòng đợi vài phút.';
     } else if (error.code === 'auth/invalid-email') {
       msg = 'Định dạng email không hợp lệ.';
     }
     showToast(msg, 'danger');
-    // Hiện thông báo lỗi ngay trên form Login
     if (errorText) errorText.textContent = msg;
     if (errorBox) errorBox.style.display = 'block';
   } finally {
