@@ -25,49 +25,29 @@ function initFirebase() {
       }
       db = firebase.firestore();
       auth = firebase.auth();
-      console.log("Firebase initialized for TaskFlow");
+      console.log("🔥 Firebase initialized successfully for TaskFlow (Realtime Sync)");
 
       auth.onAuthStateChanged((user) => {
-        if (user) {
-          console.log("Firebase Auth connected:", user.email);
+        if (user && user.email) {
+          console.log("🔥 Firebase Auth connected:", user.email);
+          const member = findOrCreateMember(user.email, user.uid);
+          state.currentUser = {
+            email: user.email.toLowerCase().trim(),
+            name: member.name,
+            memberId: member.id,
+            uid: user.uid
+          };
+          sessionStorage.setItem('taskflow_current_user', JSON.stringify(state.currentUser));
+          updateCurrentUserBadge();
+          closeLoginScreen();
           setupFirebaseRealtimeListeners();
         } else {
-          // Tai khoan bi xoa tren Firebase hoac dang xuat
-          if (state.currentUser) {
-            const deletedEmail = state.currentUser.email;
-
-            // TU DONG XOA KHOI DANH SACH THANH VIEN TREN FIRESTORE
-            // -> tat ca nguoi dung khac se thay workspace bien mat ngay lap tuc (qua onSnapshot)
-            if (db && deletedEmail) {
-              db.collection('app_settings').doc('members').get().then((doc) => {
-                if (doc.exists) {
-                  const currentList = doc.data().list || [];
-                  const newList = currentList.filter(m => 
-                    m && m.email && m.email.toLowerCase().trim() !== deletedEmail.toLowerCase().trim()
-                  );
-                  if (newList.length !== currentList.length) {
-                    db.collection('app_settings').doc('members').set(
-                      { list: newList },
-                      { merge: true }
-                    ).catch(() => {});
-                  }
-                }
-              }).catch(() => {});
-            }
-
-            // Xoa phien dang nhap cuc bo
-            sessionStorage.removeItem('taskflow_current_user');
-            localStorage.removeItem('taskflow_members');
-            state.currentUser = null;
-            state.members = [];
-            updateCurrentUserBadge();
-            renderSubmenus();
-            openLoginScreen();
-            showToast('Tai khoan da bi xoa. Vui long lien he quan tri vien.', 'danger');
-          }
+          state.currentUser = null;
+          sessionStorage.removeItem('taskflow_current_user');
+          updateCurrentUserBadge();
+          openLoginScreen();
         }
       });
-
     } catch (err) {
       console.warn("Firebase Init Notice:", err.message);
     }
@@ -305,8 +285,9 @@ function saveDataToStorage() {
   localStorage.setItem('taskflow_google_syntax_map', JSON.stringify(state.googleSyntaxMap || {}));
   localStorage.setItem('taskflow_backlink_syntax_map', JSON.stringify(state.backlinkSyntaxMap || {}));
 
-  // Sync settings and categories to cloud efficiently
+  // Sync settings, categories and syntax maps to cloud efficiently
   syncCategoriesToFirebase();
+  syncSyntaxMapsToFirebase();
 }
 
 // Dynamic Category Options Filter in Toolbar
@@ -3034,105 +3015,78 @@ function setupFirebaseRealtimeListeners() {
     }
   }, (err) => console.log("Firestore notes sync:", err.message));
 
+  // 0.9. Syntax Maps Realtime Sync (Google & Backlink generated syntax maps across devices)
+  db.collection('app_settings').doc('syntax_maps').onSnapshot((doc) => {
+    if (doc.exists && doc.data()) {
+      const data = doc.data();
+      if (data.googleSyntaxMap) state.googleSyntaxMap = data.googleSyntaxMap;
+      if (data.backlinkSyntaxMap) state.backlinkSyntaxMap = data.backlinkSyntaxMap;
+      localStorage.setItem('taskflow_google_syntax_map', JSON.stringify(state.googleSyntaxMap));
+      localStorage.setItem('taskflow_backlink_syntax_map', JSON.stringify(state.backlinkSyntaxMap));
+      renderGoogleSyntaxList();
+      renderBacklinkSyntaxList();
+    }
+  }, (err) => console.log("Firestore syntax maps sync notice:", err.message));
+
   // 1. Articles Realtime Sync
   db.collection('articles').onSnapshot((snapshot) => {
-    if (snapshot && !snapshot.empty) {
+    if (snapshot) {
       const items = [];
       snapshot.forEach(doc => { if (doc.exists && doc.data()) items.push({ id: doc.id, ...doc.data() }); });
-      if (items.length > 0) {
-        state.articles = items;
-        localStorage.setItem('taskflow_articles', JSON.stringify(state.articles));
-      }
-    } else if (db && state.articles.length > 0) {
-      state.articles.forEach(item => syncItemToFirebase('articles', item));
+      state.articles = items;
+      localStorage.setItem('taskflow_articles', JSON.stringify(state.articles));
+      renderArticlesView();
+      renderOverviewView();
     }
-    renderArticlesView();
-    renderOverviewView();
-  }, (err) => {
-    console.log("Firestore articles sync notice:", err.message);
-    renderArticlesView();
-    renderOverviewView();
-  });
+  }, (err) => console.log("Firestore articles sync notice:", err.message));
 
   // 2. Prompts Realtime Sync
   db.collection('prompts').onSnapshot((snapshot) => {
-    if (snapshot && !snapshot.empty) {
+    if (snapshot) {
       const items = [];
       snapshot.forEach(doc => { if (doc.exists && doc.data()) items.push({ id: doc.id, ...doc.data() }); });
-      if (items.length > 0) {
-        state.prompts = items;
-        localStorage.setItem('taskflow_prompts', JSON.stringify(state.prompts));
-      }
-    } else if (db && state.prompts.length > 0) {
-      state.prompts.forEach(item => syncItemToFirebase('prompts', item));
+      state.prompts = items;
+      localStorage.setItem('taskflow_prompts', JSON.stringify(state.prompts));
+      renderPromptsView();
+      renderOverviewView();
     }
-    renderPromptsView();
-    renderOverviewView();
-  }, (err) => {
-    console.log("Firestore prompts sync notice:", err.message);
-    renderPromptsView();
-    renderOverviewView();
-  });
+  }, (err) => console.log("Firestore prompts sync notice:", err.message));
 
   // 3. Backlinks Realtime Sync
   db.collection('backlinks').onSnapshot((snapshot) => {
-    if (snapshot && !snapshot.empty) {
+    if (snapshot) {
       const items = [];
       snapshot.forEach(doc => { if (doc.exists && doc.data()) items.push({ id: doc.id, ...doc.data() }); });
-      if (items.length > 0) {
-        state.backlinks = items;
-        localStorage.setItem('taskflow_backlinks', JSON.stringify(state.backlinks));
-      }
-    } else if (db && state.backlinks.length > 0) {
-      state.backlinks.forEach(item => syncItemToFirebase('backlinks', item));
+      state.backlinks = items;
+      localStorage.setItem('taskflow_backlinks', JSON.stringify(state.backlinks));
+      renderBacklinksView();
+      renderOverviewView();
     }
-    renderBacklinksView();
-    renderOverviewView();
-  }, (err) => {
-    console.log("Firestore backlinks sync notice:", err.message);
-    renderBacklinksView();
-    renderOverviewView();
-  });
+  }, (err) => console.log("Firestore backlinks sync notice:", err.message));
 
   // 4. Backlink Blogger Realtime Sync
   db.collection('backlinkBlogger').onSnapshot((snapshot) => {
-    if (snapshot && !snapshot.empty) {
+    if (snapshot) {
       const items = [];
       snapshot.forEach(doc => { if (doc.exists && doc.data()) items.push({ id: doc.id, ...doc.data() }); });
-      if (items.length > 0) {
-        state.backlinkBlogger = items;
-        localStorage.setItem('taskflow_backlinkBlogger', JSON.stringify(state.backlinkBlogger));
-      }
-    } else if (db && state.backlinkBlogger.length > 0) {
-      state.backlinkBlogger.forEach(item => syncItemToFirebase('backlinkBlogger', item));
+      state.backlinkBlogger = items;
+      localStorage.setItem('taskflow_backlinkBlogger', JSON.stringify(state.backlinkBlogger));
+      renderBacklinkBloggerView();
+      renderOverviewView();
     }
-    renderBacklinkBloggerView();
-    renderOverviewView();
-  }, (err) => {
-    console.log("Firestore backlinkBlogger sync notice:", err.message);
-    renderBacklinkBloggerView();
-    renderOverviewView();
-  });
+  }, (err) => console.log("Firestore backlinkBlogger sync notice:", err.message));
 
   // 5. Syntax Realtime Sync
   db.collection('syntax').onSnapshot((snapshot) => {
-    if (snapshot && !snapshot.empty) {
+    if (snapshot) {
       const items = [];
       snapshot.forEach(doc => { if (doc.exists && doc.data()) items.push({ id: doc.id, ...doc.data() }); });
-      if (items.length > 0) {
-        state.syntax = items;
-        localStorage.setItem('taskflow_syntax', JSON.stringify(state.syntax));
-      }
-    } else if (db && state.syntax.length > 0) {
-      state.syntax.forEach(item => syncItemToFirebase('syntax', item));
+      state.syntax = items;
+      localStorage.setItem('taskflow_syntax', JSON.stringify(state.syntax));
+      renderSyntaxView();
+      renderOverviewView();
     }
-    renderSyntaxView();
-    renderOverviewView();
-  }, (err) => {
-    console.log("Firestore syntax sync notice:", err.message);
-    renderSyntaxView();
-    renderOverviewView();
-  });
+  }, (err) => console.log("Firestore syntax sync notice:", err.message));
 
   // 6. Activities Realtime Sync (Nhật ký Hoạt động Realtime - Tự động xóa sau 10s để bóp data)
   db.collection('activities').onSnapshot((snapshot) => {
@@ -3165,6 +3119,15 @@ function syncCategoriesToFirebase() {
     db.collection('app_settings').doc('categories').set({
       list: state.categories || DEFAULT_CATEGORIES
     }, { merge: true }).catch(err => console.log('Sync categories error:', err.message));
+  }
+}
+
+function syncSyntaxMapsToFirebase() {
+  if (typeof db !== 'undefined' && db) {
+    db.collection('app_settings').doc('syntax_maps').set({
+      googleSyntaxMap: state.googleSyntaxMap || {},
+      backlinkSyntaxMap: state.backlinkSyntaxMap || {}
+    }, { merge: true }).catch(err => console.log('Sync syntax maps error:', err.message));
   }
 }
 
