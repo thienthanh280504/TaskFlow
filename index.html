@@ -136,30 +136,35 @@
               <div class="kpi-details">
                 <span class="kpi-title">Thư viện Prompt</span>
                 <h3 class="kpi-value" id="kpi-prompts-count">0</h3>
+                <span class="kpi-sub"><span id="kpi-prompts-fav">0</span> yêu thích</span>
               </div>
             </div>
             <div class="kpi-card accent-blue">
               <div class="kpi-details">
                 <span class="kpi-title">Bài viết Quản lý</span>
                 <h3 class="kpi-value" id="kpi-articles-count">0</h3>
+                <span class="kpi-sub"><span id="kpi-articles-pub">0</span> đã xuất bản</span>
               </div>
             </div>
             <div class="kpi-card accent-emerald">
               <div class="kpi-details">
                 <span class="kpi-title">Nguồn Backlink</span>
                 <h3 class="kpi-value" id="kpi-backlinks-count">0</h3>
+                <span class="kpi-sub"><span id="kpi-backlinks-live">0</span> link tổng</span>
               </div>
             </div>
             <div class="kpi-card accent-rose">
               <div class="kpi-details">
                 <span class="kpi-title">Backlink Blogger</span>
                 <h3 class="kpi-value" id="kpi-blogger-count">0</h3>
+                <span class="kpi-sub"><span id="kpi-blogger-items">0</span> bài đăng</span>
               </div>
             </div>
             <div class="kpi-card accent-amber">
               <div class="kpi-details">
                 <span class="kpi-title">Dữ liệu Cú Pháp</span>
                 <h3 class="kpi-value" id="kpi-syntax-count">0</h3>
+                <span class="kpi-sub"><span id="kpi-syntax-items">0</span> dòng cú pháp</span>
               </div>
             </div>
           </div>
@@ -415,6 +420,7 @@
                 <span>Ghi chú</span>
                 <span id="btn-note-syntax-dot" class="note-dot" style="display:none;"></span>
               </button>
+              <span id="syntax-active-member-badge" style="display:none;"></span>
               <select id="syntax-member-filter" class="form-select" onchange="handleMemberFilterSelect('syntax', this.value)">
                 <!-- Populated by JS -->
               </select>
@@ -432,6 +438,9 @@
               </button>
             </div>
           </div>
+
+          <!-- Top Guides Grid (Admin overview, hidden when member filter active) -->
+          <div id="syntax-guides-top-grid" style="margin-bottom: 16px;"></div>
 
 
 
@@ -463,6 +472,11 @@
                   <input type="text" id="gen-google-domain" class="form-input" placeholder="vinhomesgrandparkvhgrp.com" value="vinhomesgrandparkvhgrp.com">
                 </div>
 
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label>Xem trước cú pháp:</label>
+                  <code id="gen-google-preview" style="display: block; background: var(--bg-code, #1a1f2e); padding: 8px 12px; border-radius: 8px; font-size: 12px; color: var(--primary, #6366f1); word-break: break-all;">https://www.google.com/ ###từ khóa, tên-miền.com!!!</code>
+                </div>
+
                 <button class="btn btn-primary" style="width: 100%; justify-content: center; margin-bottom: 16px;" onclick="addGoogleSyntaxItem()">
                   Xuất Cú Pháp
                 </button>
@@ -470,11 +484,11 @@
                 <!-- Completed Syntaxes Output Box -->
                 <div class="generator-result-box">
                   <div class="result-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <span class="syntax-guide-label label-primary">Danh sách cú pháp:</span>
+                    <span class="syntax-guide-label label-primary">Danh sách cú pháp: <span id="count-google-list" style="font-weight:700; color:var(--primary);">0</span></span>
                     <button class="btn-icon-only danger" onclick="clearGoogleSyntaxList()" title="Làm mới"><i class="ri-refresh-line"></i></button>
                   </div>
                   <div class="result-code-wrap" style="max-height: 160px; overflow-y: auto;">
-                    <code id="gen-google-output" style="white-space: pre-wrap;">https://www.google.com/ ###Cho thuê The Opus One, vinhomesgrandparkvhgrp.com!!!</code>
+                    <code id="gen-google-output" style="white-space: pre-wrap;">Chưa có cú pháp Google Search nào</code>
                   </div>
                   <div class="result-actions" style="display: flex; gap: 10px;">
                     <button class="btn btn-secondary" style="flex: 1; justify-content: center;" onclick="exportGoogleSyntax()">
@@ -515,6 +529,11 @@
                   <input type="text" id="gen-backlink-kw" class="form-input" placeholder="The Tropical Vinhomes Grand Park" value="The Tropical Vinhomes Grand Park" onkeydown="if(event.key==='Enter') addBacklinkSyntaxItem()">
                 </div>
 
+                <div class="form-group" style="margin-bottom: 10px;">
+                  <label>Xem trước cú pháp:</label>
+                  <code id="gen-backlink-preview" style="display: block; background: var(--bg-code, #1a1f2e); padding: 8px 12px; border-radius: 8px; font-size: 12px; color: var(--emerald, #10b981); word-break: break-all;">https://backlink-url.com ###từ khóa!!!</code>
+                </div>
+
                 <button class="btn btn-success" style="width: 100%; justify-content: center; margin-bottom: 16px;" onclick="addBacklinkSyntaxItem()">
                   Xuất Cú Pháp
                 </button>
@@ -522,11 +541,11 @@
                 <!-- Completed Syntaxes Output Box -->
                 <div class="generator-result-box">
                   <div class="result-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <span class="syntax-guide-label label-emerald">Danh sách cú pháp:</span>
+                    <span class="syntax-guide-label label-emerald">Danh sách cú pháp: <span id="count-backlink-list" style="font-weight:700; color:var(--emerald);">0</span></span>
                     <button class="btn-icon-only danger" onclick="clearBacklinkSyntaxList()" title="Làm mới"><i class="ri-refresh-line"></i></button>
                   </div>
                   <div class="result-code-wrap" style="max-height: 160px; overflow-y: auto;">
-                    <code id="gen-backlink-output" style="white-space: pre-wrap;">https://sites.google.com/view/thetropical/vinhomesgrandpark ###The Tropical Vinhomes Grand Park!!!</code>
+                    <code id="gen-backlink-output" style="white-space: pre-wrap;">Chưa có cú pháp Backlink nào</code>
                   </div>
                   <div class="result-actions" style="display: flex; gap: 10px;">
                     <button class="btn btn-secondary" style="flex: 1; justify-content: center;" onclick="exportBacklinkSyntax()">
